@@ -1,0 +1,7 @@
+@using MyMEDIA.Client.Pages
+
+<Router AppAssembly="@typeof(Products).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MyMEDIA.Client.Layout.MainLayout)" />
+    </Found>
+</Router>

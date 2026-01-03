@@ -1,0 +1,69 @@
+@page "/cart"
+@inject CartService CartService
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<h3>Shopping Cart</h3>
+
+@if (!CartService.Items.Any())
+{
+    <p>Your cart is empty.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in CartService.Items)
+            {
+                <tr>
+                    <td>@item.Product?.Title</td>
+                    <td>@item.UnitPrice</td>
+                    <td>@item.Quantity</td>
+                    <td>@(item.UnitPrice * item.Quantity)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="text-end">
+        <h4>Total: @CartService.Total() €</h4>
+        <button class="btn btn-success" @onclick="Checkout">Checkout</button>
+    </div>
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        CartService.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        CartService.OnChange -= StateHasChanged;
+    }
+
+    async Task Checkout()
+    {
+        var order = new Order
+        {
+            UserId = "demo-user", // Placeholder for logged in user
+            Items = CartService.Items
+        };
+
+        var response = await Http.PostAsJsonAsync("api/orders", order);
+        if (response.IsSuccessStatusCode)
+        {
+            CartService.Clear();
+            Navigation.NavigateTo("/products");
+            // Show success message
+        }
+    }
+}

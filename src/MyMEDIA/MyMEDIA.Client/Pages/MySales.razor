@@ -1,0 +1,60 @@
+@page "/my-sales"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject HttpClient Http
+@using MyMEDIA.Shared.Entities
+
+<h3>My Sales History</h3>
+
+@if (sales == null)
+{
+    <p>Loading...</p>
+}
+else if (!sales.Any())
+{
+    <p>You haven't sold any items yet.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Product</th>
+                <th>Qty Sold</th>
+                <th>Unit Price</th>
+                <th>Total Earned</th>
+                <th>Order ID</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in sales)
+            {
+                <tr>
+                    <td>@item.Order?.OrderDate.ToShortDateString()</td>
+                    <td>@item.Product?.Title</td>
+                    <td>@item.Quantity</td>
+                    <td>@item.UnitPrice</td>
+                    <td>@(item.UnitPrice * item.Quantity)</td>
+                    <td>#@item.OrderId</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    List<OrderItem>? sales;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            sales = await Http.GetFromJsonAsync<List<OrderItem>>("api/orders/sales");
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+}

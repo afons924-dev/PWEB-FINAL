@@ -1,0 +1,49 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "MyMEDIA.Web",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-solution",
+            "program": "${workspaceFolder}/src/MyMEDIA/MyMEDIA.Web/bin/Debug/net9.0/MyMEDIA.Web.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/MyMEDIA/MyMEDIA.Web",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceFolder}/Views"
+            }
+        },
+        {
+            "name": "MyMEDIA.API",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-solution",
+            "program": "${workspaceFolder}/src/MyMEDIA/MyMEDIA.API/bin/Debug/net9.0/MyMEDIA.API.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/MyMEDIA/MyMEDIA.API",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+                "uriFormat": "%s/swagger"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            }
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Run All",
+            "configurations": ["MyMEDIA.API", "MyMEDIA.Web"]
+        }
+    ]
+}

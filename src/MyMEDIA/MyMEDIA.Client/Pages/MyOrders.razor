@@ -1,0 +1,72 @@
+@page "/my-orders"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject HttpClient Http
+@using MyMEDIA.Shared.Entities
+
+<h3>My Order History</h3>
+
+@if (orders == null)
+{
+    <p>Loading...</p>
+}
+else if (!orders.Any())
+{
+    <p>You have no orders yet.</p>
+}
+else
+{
+    <div class="accordion" id="ordersAccordion">
+        @foreach (var order in orders)
+        {
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#order-@order.Id">
+                        Order #@order.Id - @order.OrderDate.ToShortDateString() - @order.TotalAmount € - <span class="badge bg-info text-dark ms-2">@order.Status</span>
+                    </button>
+                </h2>
+                <div id="order-@order.Id" class="accordion-collapse collapse" data-bs-parent="#ordersAccordion">
+                    <div class="accordion-body">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Price</th>
+                                    <th>Qty</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in order.Items)
+                                {
+                                    <tr>
+                                        <td>@item.Product?.Title</td>
+                                        <td>@item.UnitPrice</td>
+                                        <td>@item.Quantity</td>
+                                        <td>@(item.UnitPrice * item.Quantity)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    List<Order>? orders;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            orders = await Http.GetFromJsonAsync<List<Order>>("api/orders/my");
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+}

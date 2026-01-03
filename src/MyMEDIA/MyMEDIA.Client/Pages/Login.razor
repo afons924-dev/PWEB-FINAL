@@ -1,0 +1,41 @@
+@page "/login"
+@using MyMEDIA.Client.Auth
+@inject CustomAuthStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+<h3>Login</h3>
+
+<div class="card" style="max-width: 400px;">
+    <div class="card-body">
+        <div class="mb-3">
+            <label>Email</label>
+            <input @bind="email" class="form-control" type="email" />
+        </div>
+        <div class="mb-3">
+            <label>Password</label>
+            <input @bind="password" class="form-control" type="password" />
+        </div>
+        <button class="btn btn-primary w-100" @onclick="HandleLogin">Login</button>
+        <div class="mt-2 text-center">
+             <a href="register">Register</a>
+        </div>
+    </div>
+</div>
+
+@code {
+    string email;
+    string password;
+
+    async Task HandleLogin()
+    {
+        try
+        {
+            await AuthStateProvider.Login(email, password);
+            Navigation.NavigateTo("/");
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine($"Login failed: {ex.Message}");
+        }
+    }
+}

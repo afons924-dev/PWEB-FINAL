@@ -1,0 +1,90 @@
+@page "/"
+
+<div class="home-container">
+    <header class="site-header">
+        <div class="logo">Frutolândia</div>
+        <div class="search-bar">
+            <input type="text" placeholder="Pesquisar..." />
+            <img src="images/search.png" alt="Search" class="icon" />
+        </div>
+        <div class="header-icons">
+            <a href="#"><img src="images/user.png" alt="User" class="icon" /></a>
+            <a href="#"><img src="images/heart.png" alt="Favorites" class="icon" /></a>
+            <a href="#"><img src="images/cart.png" alt="Cart" class="icon" /></a>
+        </div>
+    </header>
+
+    <div class="hero-section">
+        <div class="hero-content">
+            <div class="suggestion-text">
+                <h2>Sugestão do Momento - 12.00 €/Kg</h2>
+                <div class="actions">
+                     <button class="btn-icon"><img src="images/heart.png" alt="Fav" /></button>
+                     <button class="btn-icon"><img src="images/cart.png" alt="Add" /></button>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="images/kiwi.jpg" alt="Kiwi" />
+                <div class="dots">
+                    <span>◆</span><span>◇</span><span>◇</span><span>◇</span>
+                </div>
+            </div>
+        </div>
+        <div class="hero-footer">
+            <p class="suggestion-note">A nossa sugestão: Kiwis 12.00 €/Kg</p>
+        </div>
+    </div>
+
+    <div class="categories-section">
+        <div class="category-card">
+            <div class="card-header">
+                <span>Frutas Frescas</span>
+                <span class="arrow">&lt;</span>
+            </div>
+            <div class="card-image">
+                <img src="images/cestofrutas.png" alt="Frutas Frescas" />
+                <button class="add-btn">+</button>
+            </div>
+        </div>
+
+        <div class="category-card">
+            <div class="card-header">
+                <span>Frutos Secos</span>
+            </div>
+            <div class="card-image">
+                <img src="images/frutas.png" alt="Frutos Secos" /> <!-- Placeholder -->
+                <button class="add-btn">+</button>
+            </div>
+        </div>
+
+        <div class="category-card">
+            <div class="card-header">
+                <span>Sumos de Fruta</span>
+            </div>
+            <div class="card-image">
+                <img src="images/laranja.jpg" alt="Sumos" />
+                <button class="add-btn">+</button>
+            </div>
+        </div>
+
+         <div class="category-card">
+            <div class="card-header">
+                <span>Legumes</span>
+                <span class="arrow">&gt;</span>
+            </div>
+            <div class="card-image">
+                <img src="images/morangos.jpg" alt="Legumes" /> <!-- Placeholder -->
+                <button class="add-btn">+</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    public class ProductViewModel
+    {
+        public string Title { get; set; } = "";
+        public string ImageUrl { get; set; } = "";
+        public decimal Price { get; set; }
+    }
+}

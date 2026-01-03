@@ -1,0 +1,93 @@
+@page "/products"
+@inject HttpClient Http
+@inject MyMEDIA.Client.Services.CartService CartService
+
+<h3>Products</h3>
+
+<div class="row">
+    <div class="col-md-3">
+        <h4>Categories</h4>
+        <div class="list-group">
+            <button class="list-group-item list-group-item-action @(selectedCategory == 0 ? "active" : "")" @onclick="() => FilterByCategory(0)">All</button>
+            @foreach(var cat in categories)
+            {
+                 <button class="list-group-item list-group-item-action @(selectedCategory == cat.Id ? "active" : "")" @onclick="() => FilterByCategory(cat.Id)">@cat.Name</button>
+            }
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="row">
+            @if (filteredProducts == null)
+            {
+                <p>Loading...</p>
+            }
+            else
+            {
+                @foreach (var product in filteredProducts)
+                {
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <img src="@(string.IsNullOrEmpty(product.ImageUrl) ? "/images/bananas.jpg" : product.ImageUrl)" class="card-img-top" alt="@product.Title" style="height: 200px; object-fit: cover;">
+                            <div class="card-body">
+                                <h5 class="card-title">@product.Title</h5>
+                                <p class="card-text">@product.Description</p>
+                                <p class="fw-bold text-primary">@product.FinalPrice €</p>
+                                @if(product.StockQuantity > 0)
+                                {
+                                    <small class="text-success">In Stock (@product.StockQuantity)</small>
+                                    <button class="btn btn-primary w-100 mt-2" @onclick="() => AddToCart(product)">Add to Cart</button>
+                                }
+                                else
+                                {
+                                    <small class="text-danger">Out of Stock</small>
+                                    <button class="btn btn-secondary w-100 mt-2" disabled>Sold Out</button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Product>? allProducts;
+    private List<Product>? filteredProducts;
+    private List<Category> categories = new();
+    private int selectedCategory = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            allProducts = await Http.GetFromJsonAsync<List<Product>>("api/products");
+            // Assuming we had a categories endpoint, for now we infer or hardcode,
+            // but ideally: categories = await Http.GetFromJsonAsync<List<Category>>("api/categories");
+            // Let's create a distinct list from products for PoC if API missing
+            if(allProducts != null) {
+                categories = allProducts.Select(p => p.Category).Where(c => c != null).DistinctBy(c => c.Id).ToList();
+                filteredProducts = allProducts;
+            }
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine($"Error fetching products: {ex.Message}");
+        }
+    }
+
+    void FilterByCategory(int categoryId)
+    {
+        selectedCategory = categoryId;
+        if(categoryId == 0)
+            filteredProducts = allProducts;
+        else
+            filteredProducts = allProducts?.Where(p => p.CategoryId == categoryId).ToList();
+    }
+
+    private void AddToCart(Product product)
+    {
+        CartService.AddToCart(product);
+    }
+}

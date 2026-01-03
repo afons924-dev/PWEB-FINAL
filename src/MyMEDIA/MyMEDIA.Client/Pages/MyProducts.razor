@@ -1,0 +1,116 @@
+@page "/my-products"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject HttpClient Http
+@using MyMEDIA.Shared.Entities
+
+<h3>My Products</h3>
+
+<div class="mb-3">
+    <button class="btn btn-success" @onclick="CreateNew">Add New Product</button>
+</div>
+
+@if (products == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Base Price</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in products)
+            {
+                <tr>
+                    <td>@p.Title</td>
+                    <td>@p.BasePrice</td>
+                    <td>@(p.IsActive ? "Active" : "Pending")</td>
+                    <td>
+                        <button class="btn btn-primary" @onclick="() => Edit(p)">Edit</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (editingProduct != null)
+{
+    <div class="card mt-4">
+        <div class="card-header">@(editingProduct.Id == 0 ? "New Product" : "Edit Product")</div>
+        <div class="card-body">
+            <EditForm Model="@editingProduct" OnValidSubmit="Save">
+                <DataAnnotationsValidator />
+
+                <div class="mb-3">
+                    <label>Title</label>
+                    <InputText @bind-Value="editingProduct.Title" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label>Description</label>
+                    <InputTextArea @bind-Value="editingProduct.Description" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label>Base Price</label>
+                    <InputNumber @bind-Value="editingProduct.BasePrice" class="form-control" />
+                </div>
+
+                <button type="submit" class="btn btn-success">Save</button>
+                <button type="button" class="btn btn-secondary" @onclick="() => editingProduct = null">Cancel</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    List<Product>? products;
+    Product? editingProduct;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProducts();
+    }
+
+    async Task LoadProducts()
+    {
+        // In a real app, this endpoint filters by the current user's ID
+        // For PoC, assuming "myproducts" endpoint exists
+        try {
+             products = await Http.GetFromJsonAsync<List<Product>>("api/products/my");
+        } catch {
+             // Fallback if auth not fully wired in backend for filtering
+             products = new List<Product>();
+        }
+    }
+
+    void CreateNew()
+    {
+        editingProduct = new Product { IsForSale = true };
+    }
+
+    void Edit(Product p)
+    {
+        editingProduct = p;
+    }
+
+    async Task Save()
+    {
+        if (editingProduct.Id == 0)
+        {
+            await Http.PostAsJsonAsync("api/products", editingProduct);
+        }
+        else
+        {
+            await Http.PutAsJsonAsync($"api/products/{editingProduct.Id}", editingProduct);
+        }
+        editingProduct = null;
+        await LoadProducts();
+    }
+}

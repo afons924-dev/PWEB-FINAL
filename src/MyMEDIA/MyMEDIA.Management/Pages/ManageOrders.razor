@@ -1,0 +1,104 @@
+@page "/orders"
+@inject ApplicationDbContext DbContext
+@inject NavigationManager Navigation
+@using Microsoft.EntityFrameworkCore
+@using MyMEDIA.Shared.Entities
+@using MyMEDIA.Shared.Data
+
+<h3>Order Management</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Order ID</th>
+            <th>Date</th>
+            <th>Customer</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var order in orders)
+        {
+            <tr>
+                <td>#@order.Id</td>
+                <td>@order.OrderDate</td>
+                <td>@order.UserId</td>
+                <td>@order.TotalAmount €</td>
+                <td>
+                    <span class="badge @GetStatusColor(order.Status)">@order.Status</span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-info" @onclick="() => ViewDetails(order)">Details</button>
+                    @if(order.Status == "Pending")
+                    {
+                        <button class="btn btn-sm btn-success" @onclick="() => UpdateStatus(order, \"Paid\")">Confirm Pay</button>
+                    }
+                    @if(order.Status == "Paid")
+                    {
+                        <button class="btn btn-sm btn-primary" @onclick="() => UpdateStatus(order, \"Shipped\")">Ship</button>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (selectedOrder != null)
+{
+    <div class="card mt-4 border-primary">
+        <div class="card-header bg-primary text-white">
+            Order Details #@selectedOrder.Id
+            <button class="btn btn-sm btn-light float-end" @onclick="() => selectedOrder = null">Close</button>
+        </div>
+        <div class="card-body">
+            <ul>
+                @foreach(var item in selectedOrder.Items)
+                {
+                    <li>@item.Product?.Title - Qty: @item.Quantity - Price: @item.UnitPrice €</li>
+                }
+            </ul>
+        </div>
+    </div>
+}
+
+@code {
+    List<Order> orders = new();
+    Order? selectedOrder;
+
+    protected override void OnInitialized()
+    {
+        LoadOrders();
+    }
+
+    void LoadOrders()
+    {
+        orders = DbContext.Orders
+            .Include(o => o.Items)
+            .ThenInclude(i => i.Product)
+            .OrderByDescending(o => o.OrderDate)
+            .ToList();
+    }
+
+    void ViewDetails(Order order)
+    {
+        selectedOrder = order;
+    }
+
+    void UpdateStatus(Order order, string newStatus)
+    {
+        order.Status = newStatus;
+        DbContext.Update(order);
+        DbContext.SaveChanges();
+        LoadOrders();
+    }
+
+    string GetStatusColor(string status) => status switch
+    {
+        "Pending" => "bg-warning",
+        "Paid" => "bg-success",
+        "Shipped" => "bg-primary",
+        _ => "bg-secondary"
+    };
+}

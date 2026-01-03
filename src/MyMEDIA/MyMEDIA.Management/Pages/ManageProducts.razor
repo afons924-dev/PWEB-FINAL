@@ -1,0 +1,107 @@
+@page "/products"
+@inject ApplicationDbContext DbContext
+
+<h3>Product Management</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Base Price</th>
+            <th>Final Price</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var product in products)
+        {
+            <tr>
+                <td>@product.Title</td>
+                <td>@product.BasePrice</td>
+                <td>@product.FinalPrice</td>
+                <td>@(product.IsActive ? "Active" : "Pending")</td>
+                <td>
+                    <button class="btn btn-primary" @onclick="() => EditProduct(product)">Edit</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (selectedProduct != null)
+{
+    <div class="card mt-4">
+        <div class="card-header">Edit Product</div>
+        <div class="card-body">
+            <EditForm Model="@selectedProduct" OnValidSubmit="SaveProduct">
+                <DataAnnotationsValidator />
+
+                <div class="mb-3">
+                    <label>Title</label>
+                    <InputText @bind-Value="selectedProduct.Title" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label>Base Price</label>
+                    <InputNumber @bind-Value="selectedProduct.BasePrice" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label>Markup Percentage (e.g. 20 for 20%)</label>
+                    <input type="number" @bind="MarkupPercentage" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label>Final Price (Auto-calc)</label>
+                    <input value="@CalculateFinalPrice()" class="form-control" disabled />
+                </div>
+
+                <div class="mb-3">
+                    <label>Stock Quantity</label>
+                    <InputNumber @bind-Value="selectedProduct.StockQuantity" class="form-control" />
+                </div>
+
+                <div class="mb-3 form-check">
+                    <InputCheckbox @bind-Value="selectedProduct.IsActive" class="form-check-input" />
+                    <label class="form-check-label">Is Active? (Visible in Store)</label>
+                </div>
+
+                <button type="submit" class="btn btn-success">Save & Publish</button>
+                <button type="button" class="btn btn-secondary" @onclick="() => selectedProduct = null">Cancel</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    List<Product> products = new();
+    Product? selectedProduct;
+    decimal MarkupPercentage = 0;
+
+    protected override void OnInitialized()
+    {
+        products = DbContext.Products.ToList();
+    }
+
+    void EditProduct(Product product)
+    {
+        selectedProduct = product;
+        // Estimate markup from current prices if possible, else 0
+        if(product.BasePrice > 0)
+            MarkupPercentage = Math.Round(((product.FinalPrice - product.BasePrice) / product.BasePrice) * 100, 0);
+    }
+
+    decimal CalculateFinalPrice()
+    {
+        if (selectedProduct == null) return 0;
+        return selectedProduct.BasePrice + (selectedProduct.BasePrice * MarkupPercentage / 100);
+    }
+
+    void SaveProduct()
+    {
+        selectedProduct.FinalPrice = CalculateFinalPrice();
+        DbContext.Update(selectedProduct);
+        DbContext.SaveChanges();
+        selectedProduct = null;
+        products = DbContext.Products.ToList();
+    }
+}
