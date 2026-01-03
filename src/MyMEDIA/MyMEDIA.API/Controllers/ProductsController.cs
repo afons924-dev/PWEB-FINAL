@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MyMEDIA.Shared.Data;
@@ -23,6 +24,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet("my")]
+    [Authorize]
     public async Task<ActionResult<IEnumerable<Product>>> GetMyProducts()
     {
         // Ideally verify User.Identity.Name or ClaimTypes.NameIdentifier
@@ -36,6 +38,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet("all")] // For management
+    [Authorize]
     public async Task<ActionResult<IEnumerable<Product>>> GetAllProducts()
     {
         return await _context.Products.Include(p => p.Category).ToListAsync();
@@ -55,6 +58,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<ActionResult<Product>> PostProduct(Product product)
     {
         var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -73,6 +77,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize]
     public async Task<IActionResult> PutProduct(int id, Product product)
     {
         if (id != product.Id)
@@ -102,6 +107,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize]
     public async Task<IActionResult> DeleteProduct(int id)
     {
         var product = await _context.Products.FindAsync(id);

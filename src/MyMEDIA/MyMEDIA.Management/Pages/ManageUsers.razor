@@ -1,0 +1,104 @@
+@page "/users"
+@using Microsoft.AspNetCore.Identity
+@using MyMEDIA.Shared.Data
+@inject UserManager<ApplicationUser> UserManager
+@inject RoleManager<IdentityRole> RoleManager
+
+<h3>User Management</h3>
+
+<div class="mb-3">
+    <button class="btn btn-outline-primary" @onclick="() => Filter(null)">All</button>
+    <button class="btn btn-outline-warning" @onclick="() => Filter(&quot;Pending&quot;)">Pending</button>
+    <button class="btn btn-outline-success" @onclick="() => Filter(&quot;Active&quot;)">Active</button>
+</div>
+
+@if (isLoading)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in filteredUsers)
+            {
+                <tr>
+                    <td>@user.Email</td>
+                    <td>@user.UserType</td>
+                    <td>
+                        <span class="badge @(user.Status == "Active" ? "bg-success" : "bg-warning text-dark")">@user.Status</span>
+                    </td>
+                    <td>
+                        @if (user.Status == "Pending")
+                        {
+                            <button class="btn btn-sm btn-success me-2" @onclick="() => SetStatus(user, &quot;Active&quot;)">Approve</button>
+                        }
+                        else
+                        {
+                             <button class="btn btn-sm btn-warning me-2" @onclick="() => SetStatus(user, &quot;Pending&quot;)">Suspend</button>
+                        }
+
+                        @if (user.UserType != "Employee" && user.UserType != "Admin")
+                        {
+                            <button class="btn btn-sm btn-info" @onclick="() => Promote(user)">Promote to Staff</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    List<ApplicationUser> allUsers = new();
+    List<ApplicationUser> filteredUsers = new();
+    bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // UserManager.Users is IQueryable
+        allUsers = UserManager.Users.ToList();
+        filteredUsers = allUsers;
+        isLoading = false;
+    }
+
+    void Filter(string? status)
+    {
+        if (status == null)
+            filteredUsers = allUsers;
+        else
+            filteredUsers = allUsers.Where(u => u.Status == status).ToList();
+    }
+
+    async Task SetStatus(ApplicationUser user, string status)
+    {
+        user.Status = status;
+        await UserManager.UpdateAsync(user);
+        // Refresh
+        allUsers = UserManager.Users.ToList();
+        Filter(null); // Reset filter or keep current (logic simplified here)
+    }
+
+    async Task Promote(ApplicationUser user)
+    {
+        if (!await RoleManager.RoleExistsAsync("Employee"))
+        {
+            await RoleManager.CreateAsync(new IdentityRole("Employee"));
+        }
+
+        await UserManager.AddToRoleAsync(user, "Employee");
+        user.UserType = "Employee";
+        await UserManager.UpdateAsync(user);
+
+        allUsers = UserManager.Users.ToList();
+        Filter(null);
+    }
+}

@@ -1,89 +1,189 @@
 @page "/products"
 @inject HttpClient Http
 @inject MyMEDIA.Client.Services.CartService CartService
+@using MyMEDIA.Shared.Entities
 
-<h3>Products</h3>
+<h3 class="mb-4">Catalog</h3>
 
-<div class="row">
-    <div class="col-md-3">
-        <h4>Categories</h4>
-        <div class="list-group">
-            <button class="list-group-item list-group-item-action @(selectedCategory == 0 ? "active" : "")" @onclick="() => FilterByCategory(0)">All</button>
-            @foreach(var cat in categories)
-            {
-                 <button class="list-group-item list-group-item-action @(selectedCategory == cat.Id ? "active" : "")" @onclick="() => FilterByCategory(cat.Id)">@cat.Name</button>
-            }
+@if(spotlightProduct != null)
+{
+    <div class="card mb-4 border-warning">
+        <div class="card-header bg-warning text-dark fw-bold">
+            Spotlight
+        </div>
+        <div class="card-body d-flex align-items-center">
+            <div class="me-3">
+                 <img src="@(string.IsNullOrEmpty(spotlightProduct.ImageUrl) ? "/images/placeholder.jpg" : spotlightProduct.ImageUrl)" class="rounded" style="width: 120px; height: 120px; object-fit: cover;" alt="@spotlightProduct.Title">
+            </div>
+            <div>
+                <h4 class="card-title">@spotlightProduct.Title</h4>
+                <p class="card-text">@spotlightProduct.Description</p>
+                <p class="mb-0 fw-bold fs-5 text-primary">@spotlightProduct.FinalPrice €</p>
+                @if(spotlightProduct.StockQuantity > 0)
+                {
+                    <button class="btn btn-dark mt-2" @onclick="() => AddToCart(spotlightProduct)">Buy Now</button>
+                }
+            </div>
         </div>
     </div>
+}
 
-    <div class="col-md-9">
-        <div class="row">
-            @if (filteredProducts == null)
-            {
-                <p>Loading...</p>
-            }
-            else
-            {
-                @foreach (var product in filteredProducts)
-                {
-                    <div class="col-md-4 mb-3">
-                        <div class="card h-100">
-                            <img src="@(string.IsNullOrEmpty(product.ImageUrl) ? "/images/bananas.jpg" : product.ImageUrl)" class="card-img-top" alt="@product.Title" style="height: 200px; object-fit: cover;">
-                            <div class="card-body">
-                                <h5 class="card-title">@product.Title</h5>
-                                <p class="card-text">@product.Description</p>
-                                <p class="fw-bold text-primary">@product.FinalPrice €</p>
-                                @if(product.StockQuantity > 0)
-                                {
-                                    <small class="text-success">In Stock (@product.StockQuantity)</small>
-                                    <button class="btn btn-primary w-100 mt-2" @onclick="() => AddToCart(product)">Add to Cart</button>
-                                }
-                                else
-                                {
-                                    <small class="text-danger">Out of Stock</small>
-                                    <button class="btn btn-secondary w-100 mt-2" disabled>Sold Out</button>
-                                }
-                            </div>
+@if (rootCategories == null)
+{
+    <p>Loading categories...</p>
+}
+else
+{
+    <!-- Level 1: Root Categories (Type) -->
+    <div class="d-flex overflow-auto pb-3 mb-3 border-bottom" style="gap: 10px; white-space: nowrap;">
+         <button class="btn @(selectedRootId == 0 ? "btn-dark" : "btn-outline-dark")" @onclick="() => SelectRoot(0)">All Types</button>
+         @foreach(var cat in rootCategories)
+         {
+             <button class="btn @(selectedRootId == cat.Id ? "btn-primary" : "btn-outline-primary")" @onclick="() => SelectRoot(cat.Id)">@cat.Name</button>
+         }
+    </div>
+
+    <!-- Level 2: SubCategories (Publisher/Group) -->
+    @if(selectedRootId > 0 && subCategories != null && subCategories.Any())
+    {
+         <div class="d-flex overflow-auto pb-3 mb-3 border-bottom" style="gap: 10px; white-space: nowrap;">
+             <button class="btn @(selectedSubId == 0 ? "btn-secondary" : "btn-outline-secondary")" @onclick="() => SelectSub(0)">All @selectedRootName</button>
+             @foreach(var sub in subCategories)
+             {
+                 <button class="btn @(selectedSubId == sub.Id ? "btn-info" : "btn-outline-info")" @onclick="() => SelectSub(sub.Id)">@sub.Name</button>
+             }
+         </div>
+    }
+}
+
+<!-- Product Grid -->
+<div class="row">
+    @if (filteredProducts == null)
+    {
+        <p>Loading products...</p>
+    }
+    else if (!filteredProducts.Any())
+    {
+        <p>No products found in this category.</p>
+    }
+    else
+    {
+        @foreach (var product in filteredProducts)
+        {
+            <div class="col-md-3 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <img src="@(string.IsNullOrEmpty(product.ImageUrl) ? "/images/placeholder.jpg" : product.ImageUrl)" class="card-img-top" alt="@product.Title" style="height: 180px; object-fit: cover;">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">@product.Title</h5>
+                        <p class="card-text small text-muted text-truncate">@product.Description</p>
+                        <div class="mt-auto">
+                            <h5 class="text-primary">@product.FinalPrice €</h5>
+                             @if(product.StockQuantity > 0)
+                            {
+                                <button class="btn btn-primary w-100" @onclick="() => AddToCart(product)">Add to Cart</button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-secondary w-100" disabled>Sold Out</button>
+                            }
                         </div>
                     </div>
-                }
-            }
-        </div>
-    </div>
+                </div>
+            </div>
+        }
+    }
 </div>
 
 @code {
     private List<Product>? allProducts;
     private List<Product>? filteredProducts;
-    private List<Category> categories = new();
-    private int selectedCategory = 0;
+    private List<Category>? rootCategories;
+    private List<Category> subCategories = new();
+    private Product? spotlightProduct;
+
+    private int selectedRootId = 0;
+    private string selectedRootName = "";
+    private int selectedSubId = 0;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
+            // Fetch Categories (Hierarchical)
+            rootCategories = await Http.GetFromJsonAsync<List<Category>>("api/categories");
+
+            // Fetch Products
             allProducts = await Http.GetFromJsonAsync<List<Product>>("api/products");
-            // Assuming we had a categories endpoint, for now we infer or hardcode,
-            // but ideally: categories = await Http.GetFromJsonAsync<List<Category>>("api/categories");
-            // Let's create a distinct list from products for PoC if API missing
-            if(allProducts != null) {
-                categories = allProducts.Select(p => p.Category).Where(c => c != null).DistinctBy(c => c.Id).ToList();
-                filteredProducts = allProducts;
+            filteredProducts = allProducts;
+
+            // Spotlight logic
+            if(allProducts != null && allProducts.Any())
+            {
+                var random = new Random();
+                var activeProducts = allProducts.Where(p => p.StockQuantity > 0).ToList();
+                if(activeProducts.Any())
+                {
+                    spotlightProduct = activeProducts[random.Next(activeProducts.Count)];
+                }
             }
         }
         catch(Exception ex)
         {
-            Console.WriteLine($"Error fetching products: {ex.Message}");
+            Console.WriteLine($"Error: {ex.Message}");
         }
     }
 
-    void FilterByCategory(int categoryId)
+    void SelectRoot(int catId)
     {
-        selectedCategory = categoryId;
-        if(categoryId == 0)
+        selectedRootId = catId;
+        selectedSubId = 0;
+
+        if (catId == 0)
+        {
+            subCategories.Clear();
             filteredProducts = allProducts;
+        }
         else
-            filteredProducts = allProducts?.Where(p => p.CategoryId == categoryId).ToList();
+        {
+            var root = rootCategories?.FirstOrDefault(c => c.Id == catId);
+            selectedRootName = root?.Name ?? "";
+            subCategories = root?.SubCategories ?? new List<Category>();
+
+            // Filter products by Root (either direct match or subcategory match)
+            FilterProducts();
+        }
+    }
+
+    void SelectSub(int subId)
+    {
+        selectedSubId = subId;
+        FilterProducts();
+    }
+
+    void FilterProducts()
+    {
+        if (allProducts == null) return;
+
+        if (selectedRootId == 0)
+        {
+            filteredProducts = allProducts;
+            return;
+        }
+
+        if (selectedSubId != 0)
+        {
+            // Specific Subcategory
+            filteredProducts = allProducts.Where(p => p.CategoryId == selectedSubId).ToList();
+        }
+        else
+        {
+            // Root Category: Include products in this category or any of its subcategories
+            // We need to know which category IDs belong to this root
+            var subIds = subCategories.Select(s => s.Id).ToList();
+            subIds.Add(selectedRootId); // Include the root itself
+
+            filteredProducts = allProducts.Where(p => subIds.Contains(p.CategoryId)).ToList();
+        }
     }
 
     private void AddToCart(Product product)

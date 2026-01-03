@@ -3,6 +3,15 @@
 
 <h3>Product Management</h3>
 
+<div class="row mb-3">
+    <div class="col-md-4">
+        <input class="form-control" @bind="searchTerm" placeholder="Search title..." />
+    </div>
+    <div class="col-md-2">
+        <button class="btn btn-primary" @onclick="Search">Search</button>
+    </div>
+</div>
+
 <table class="table">
     <thead>
         <tr>
@@ -28,6 +37,12 @@
         }
     </tbody>
 </table>
+
+<div class="d-flex justify-content-between">
+    <button class="btn btn-secondary" @onclick="PrevPage" disabled="@(currentPage == 1)">Previous</button>
+    <span>Page @currentPage</span>
+    <button class="btn btn-secondary" @onclick="NextPage" disabled="@(products.Count < pageSize)">Next</button>
+</div>
 
 @if (selectedProduct != null)
 {
@@ -76,11 +91,27 @@
     List<Product> products = new();
     Product? selectedProduct;
     decimal MarkupPercentage = 0;
+    string searchTerm = "";
+    int currentPage = 1;
+    int pageSize = 10;
 
     protected override void OnInitialized()
     {
-        products = DbContext.Products.ToList();
+        LoadProducts();
     }
+
+    void LoadProducts()
+    {
+        var query = DbContext.Products.AsQueryable();
+        if(!string.IsNullOrEmpty(searchTerm))
+             query = query.Where(p => p.Title.Contains(searchTerm));
+
+        products = query.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
+    }
+
+    void Search() { currentPage = 1; LoadProducts(); }
+    void PrevPage() { if(currentPage > 1) { currentPage--; LoadProducts(); } }
+    void NextPage() { currentPage++; LoadProducts(); }
 
     void EditProduct(Product product)
     {
@@ -102,6 +133,6 @@
         DbContext.Update(selectedProduct);
         DbContext.SaveChanges();
         selectedProduct = null;
-        products = DbContext.Products.ToList();
+        LoadProducts();
     }
 }
