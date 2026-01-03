@@ -1,0 +1,88 @@
+@page "/categories"
+@using MyMEDIA.Shared.Data
+@using MyMEDIA.Shared.Entities
+@inject ApplicationDbContext Context
+
+<h3>Category Management</h3>
+
+<div class="mb-3">
+    <input @bind="NewCategoryName" placeholder="New Category Name" />
+    <button class="btn btn-primary" @onclick="AddCategory">Add</button>
+</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Name</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var category in Categories)
+        {
+            <tr>
+                <td>@category.Id</td>
+                <td>
+                    @if (EditingId == category.Id)
+                    {
+                        <input @bind="category.Name" />
+                        <button class="btn btn-success btn-sm" @onclick="() => SaveCategory(category)">Save</button>
+                    }
+                    else
+                    {
+                        @category.Name
+                    }
+                </td>
+                <td>
+                    @if (EditingId != category.Id)
+                    {
+                        <button class="btn btn-secondary btn-sm" @onclick="() => EditingId = category.Id">Edit</button>
+                        <button class="btn btn-danger btn-sm" @onclick="() => DeleteCategory(category)">Delete</button>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<Category> Categories = new();
+    private string NewCategoryName = string.Empty;
+    private int? EditingId = null;
+
+    protected override void OnInitialized()
+    {
+        LoadCategories();
+    }
+
+    private void LoadCategories()
+    {
+        Categories = Context.Categories.ToList();
+    }
+
+    private void AddCategory()
+    {
+        if (!string.IsNullOrWhiteSpace(NewCategoryName))
+        {
+            Context.Categories.Add(new Category { Name = NewCategoryName });
+            Context.SaveChanges();
+            NewCategoryName = string.Empty;
+            LoadCategories();
+        }
+    }
+
+    private void SaveCategory(Category category)
+    {
+        Context.Categories.Update(category);
+        Context.SaveChanges();
+        EditingId = null;
+    }
+
+    private void DeleteCategory(Category category)
+    {
+        Context.Categories.Remove(category);
+        Context.SaveChanges();
+        LoadCategories();
+    }
+}

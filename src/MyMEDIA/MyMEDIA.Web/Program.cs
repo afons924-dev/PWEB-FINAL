@@ -1,16 +1,29 @@
 using MyMEDIA.Web.Components;
-using MyMEDIA.Client.Pages; // Para aceder aos componentes do Cliente
+using MyMEDIA.Client.Pages;
+using MyMEDIA.Client.Services;
+using Blazored.LocalStorage;
+using MyMEDIA.Client.Services.Interfaces; // Assuming interfaces are here
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Adicionar serviços ao contentor
+// Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
 
+builder.Services.AddBlazoredLocalStorage();
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<IApiServices, ApiService>();
+builder.Services.AddScoped<IUserSessionService, UserSessionService>();
+builder.Services.AddScoped<IFavoritosTemporariosServices, FavoritosTemporariosService>();
+builder.Services.AddScoped<ICarrinhosComprasTemporarioServices, CarrinhoComprasTemporarioService>();
+builder.Services.AddScoped<ISliderUtilsServices, SliderUtilsServices>();
+builder.Services.AddScoped<IUtilsTamanhoServices, UtilsTamanhoServices>();
+builder.Services.AddScoped<ICardsUtilsServices, CardsUtilsServices>();
+
 var app = builder.Build();
 
-// Configurar o pipeline de pedidos HTTP
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseWebAssemblyDebugging();

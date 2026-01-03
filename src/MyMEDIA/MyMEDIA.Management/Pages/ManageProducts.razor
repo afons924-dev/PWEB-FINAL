@@ -1,5 +1,7 @@
 @page "/products"
-@inject ApplicationDbContext DbContext
+@using MyMEDIA.Shared.Data
+@using MyMEDIA.Shared.Entities
+@inject ApplicationDbContext Context
 
 <h3>Product Management</h3>
 
@@ -7,101 +9,96 @@
     <thead>
         <tr>
             <th>Title</th>
+            <th>Supplier</th>
             <th>Base Price</th>
             <th>Final Price</th>
-            <th>Status</th>
+            <th>Active</th>
             <th>Actions</th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var product in products)
+        @foreach (var product in Products)
         {
             <tr>
                 <td>@product.Title</td>
+                <td>@product.SupplierId</td>
                 <td>@product.BasePrice</td>
-                <td>@product.FinalPrice</td>
-                <td>@(product.IsActive ? "Active" : "Pending")</td>
                 <td>
-                    <button class="btn btn-primary" @onclick="() => EditProduct(product)">Edit</button>
+                     @if (EditingId == product.Id)
+                     {
+                         <input type="number" step="0.01" @bind="product.FinalPrice" />
+                     }
+                     else
+                     {
+                         @product.FinalPrice
+                     }
+                </td>
+                <td>@product.IsActive</td>
+                <td>
+                    @if (EditingId == product.Id)
+                    {
+                        <button class="btn btn-success btn-sm" @onclick="() => SaveProduct(product)">Save</button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-secondary btn-sm" @onclick="() => EditingId = product.Id">Edit Price</button>
+                        @if (!product.IsActive)
+                        {
+                            <button class="btn btn-primary btn-sm" @onclick="() => ActivateProduct(product)">Activate</button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-warning btn-sm" @onclick="() => DeactivateProduct(product)">Deactivate</button>
+                        }
+                        <button class="btn btn-danger btn-sm" @onclick="() => DeleteProduct(product)">Delete</button>
+                    }
                 </td>
             </tr>
         }
     </tbody>
 </table>
 
-@if (selectedProduct != null)
-{
-    <div class="card mt-4">
-        <div class="card-header">Edit Product</div>
-        <div class="card-body">
-            <EditForm Model="@selectedProduct" OnValidSubmit="SaveProduct">
-                <DataAnnotationsValidator />
-
-                <div class="mb-3">
-                    <label>Title</label>
-                    <InputText @bind-Value="selectedProduct.Title" class="form-control" />
-                </div>
-                <div class="mb-3">
-                    <label>Base Price</label>
-                    <InputNumber @bind-Value="selectedProduct.BasePrice" class="form-control" />
-                </div>
-                <div class="mb-3">
-                    <label>Markup Percentage (e.g. 20 for 20%)</label>
-                    <input type="number" @bind="MarkupPercentage" class="form-control" />
-                </div>
-
-                <div class="mb-3">
-                    <label>Final Price (Auto-calc)</label>
-                    <input value="@CalculateFinalPrice()" class="form-control" disabled />
-                </div>
-
-                <div class="mb-3">
-                    <label>Stock Quantity</label>
-                    <InputNumber @bind-Value="selectedProduct.StockQuantity" class="form-control" />
-                </div>
-
-                <div class="mb-3 form-check">
-                    <InputCheckbox @bind-Value="selectedProduct.IsActive" class="form-check-input" />
-                    <label class="form-check-label">Is Active? (Visible in Store)</label>
-                </div>
-
-                <button type="submit" class="btn btn-success">Save & Publish</button>
-                <button type="button" class="btn btn-secondary" @onclick="() => selectedProduct = null">Cancel</button>
-            </EditForm>
-        </div>
-    </div>
-}
-
 @code {
-    List<Product> products = new();
-    Product? selectedProduct;
-    decimal MarkupPercentage = 0;
+    private List<Product> Products = new();
+    private int? EditingId = null;
 
     protected override void OnInitialized()
     {
-        products = DbContext.Products.ToList();
+        LoadProducts();
     }
 
-    void EditProduct(Product product)
+    private void LoadProducts()
     {
-        selectedProduct = product;
-        // Estimate markup from current prices if possible, else 0
-        if(product.BasePrice > 0)
-            MarkupPercentage = Math.Round(((product.FinalPrice - product.BasePrice) / product.BasePrice) * 100, 0);
+        Products = Context.Products.ToList();
     }
 
-    decimal CalculateFinalPrice()
+    private void ActivateProduct(Product product)
     {
-        if (selectedProduct == null) return 0;
-        return selectedProduct.BasePrice + (selectedProduct.BasePrice * MarkupPercentage / 100);
+        // Apply default margin if FinalPrice is 0 or equal to BasePrice?
+        if (product.FinalPrice <= product.BasePrice)
+        {
+            product.FinalPrice = product.BasePrice * 1.2m; // Default 20%
+        }
+        product.IsActive = true;
+        Context.SaveChanges();
     }
 
-    void SaveProduct()
+    private void DeactivateProduct(Product product)
     {
-        selectedProduct.FinalPrice = CalculateFinalPrice();
-        DbContext.Update(selectedProduct);
-        DbContext.SaveChanges();
-        selectedProduct = null;
-        products = DbContext.Products.ToList();
+        product.IsActive = false;
+        Context.SaveChanges();
+    }
+
+    private void SaveProduct(Product product)
+    {
+        Context.SaveChanges();
+        EditingId = null;
+    }
+
+    private void DeleteProduct(Product product)
+    {
+        Context.Products.Remove(product);
+        Context.SaveChanges();
+        LoadProducts();
     }
 }

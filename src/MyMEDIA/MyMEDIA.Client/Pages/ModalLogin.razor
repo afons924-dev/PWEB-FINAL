@@ -1,0 +1,113 @@
+﻿@page "/modalogin"
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+
+@using MyMEDIA.Shared.DTO
+@using MyMEDIA.Client.Services
+
+@inject NavigationManager NavigationManager
+
+
+<!-- Modal de Mensagem de CONFIRMACAO LOGON -->
+@if (IsModalVisible)
+{
+    <div id="modalMensagem" class="modal" style="display:block;">
+        <div class="modal-content">
+            <h2>Login Efetuado</h2>
+
+        </div>
+    </div>
+}
+
+<!-- The Modal -->
+<div id="myModal" class="modal" style="display:@estado">
+    <!-- Modal content -->
+    <div class="modal-content">
+        <h1>Efetuar Login</h1>
+        <span class="close" @onclick="Modal">&times;</span>
+
+        @if (!string.IsNullOrEmpty(mensagemErro))
+        {
+            <div class="alert alert-danger" role="alert">
+                @mensagemErro
+            </div>
+        }
+
+        <EditForm Model="LoginModel" OnValidSubmit="LoginUser">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+
+            <label for="mail" class="form-label">Email:</label>
+            <InputText id="mail" @bind-Value="LoginModel.email" class="form-control" />
+            <ValidationMessage For="() => LoginModel.email" class="text-danger" />
+
+            <label for="password" class="form-label">Password:</label>
+            <InputText id="password" type=password @bind-Value="LoginModel.password" class="form-control" />
+            <ValidationMessage For="() => LoginModel.password" class="text-danger" />
+
+            <button type="submit" class="btn btn-outline-secondary loginModalSubmitButton">
+                <img title="Login" src="/images/user.png" style="height:30px" />
+            </button>
+            <a href="/" type="button" class="btn btn-outline-secondary loginModalBackButton">
+                <img title="Recuar" src="/images/user.png" style="height:30px" />
+            </a>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+
+    [SupplyParameterFromForm]
+    public LoginModel LoginModel { get; set; } = new();
+    private string mensagemErro = string.Empty;
+
+    [Inject]
+    public IApiServices? _apiServices { get; set; }
+
+    private string estado = "block";
+
+    // MODAL DE CONFIRMACAO LOGIN!!!
+    private bool IsModalVisible { get; set; } = false;
+
+    private void Modal()
+    {
+        estado = estado == "block" ? "none" : "block";
+        NavigationManager.NavigateTo("/");
+    }
+
+    public async Task LoginUser()
+    {
+        try
+        {
+            var result = await _apiServices.Login(LoginModel);
+
+            if (result != null && result.Data == true)
+            {
+                mensagemErro = string.Empty;
+                ShowModalMensagem();
+            }
+            else
+            {
+                mensagemErro = "Credenciais inválidas.";
+                IsModalVisible = false;
+            }
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            mensagemErro = "Por favor, tente novamente.";
+        }
+    }
+
+    private async void ShowModalMensagem()
+    {
+        IsModalVisible = true;
+        estado = "none";
+
+        await Task.Delay(2000);
+
+        IsModalVisible = false;
+        NavigationManager.NavigateTo("/", forceLoad: true);
+        StateHasChanged();
+    }
+}

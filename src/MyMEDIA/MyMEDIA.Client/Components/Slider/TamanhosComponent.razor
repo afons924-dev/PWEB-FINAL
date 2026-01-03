@@ -1,0 +1,19 @@
+﻿@foreach (var tamanho in Tamanhos)
+{
+    <div class="selc-size">
+        @if (Tamanhos.IndexOf(tamanho) != utilsTamanhoServices.Index)
+        {
+            <button class="btn-size" @onclick="(() => Changed(Tamanhos.IndexOf(tamanho)))">
+                <p>@tamanho.TamanhoItem</p>
+            </button>
+        }
+        else
+        {
+            <button class="btn-size btn-size-selectd" @onclick="(() => Changed(Tamanhos.IndexOf(tamanho)))">
+                <p>@tamanho.TamanhoItem</p>
+            </button>
+        }
+
+        <p class="selc-size-p">@tamanho.Preco €</p>
+    </div>
+}
