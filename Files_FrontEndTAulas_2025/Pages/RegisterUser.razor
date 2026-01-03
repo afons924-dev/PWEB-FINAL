@@ -1,0 +1,188 @@
+﻿@page "/registaruser"
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using RCLAPI.DTO
+@using RCLAPI.Services 
+@using RCLAPI
+@inject NavigationManager NavigationManager
+
+<PageTitle>Criar Registo de Utilizador</PageTitle>
+
+<h1>Registe-se na @AppConfig.tituloHomePage</h1>
+
+@*<div>
+    <img id="imagePreview" class="img-thumbnail mt-2" src="_content/RCLComum/images/headicon.png" style="width:100px;" />
+</div>*@
+
+<hr />
+
+<EditForm Model="Utilizador" OnValidSubmit="AddUser" enctype="multipart/form-data">
+    <DataAnnotationsValidator />
+    <ValidationSummary class="text-danger" />
+
+    @*<div class="mb-3">
+        <label for="imageUri" class="form-label">Imagem de Perfil:</label>
+        <input id="imageUri" type="file" name="Utilizador.ImageFile" class="form-control" accept=".png, .jpg, .jpeg"
+               onchange="document.getElementById('imagePreview').src = window.URL.createObjectURL(this.files[0])" />
+        <ValidationMessage For="() => Utilizador.ImageFile" class="text-danger" />
+    </div>*@
+
+    <button type="submit" class="btn btn-primary"><img title="Gravar" src="/img/saveicon.png" style="height:30px" /></button>
+    <a href="/produtos" type="button" class="btn btn-outline-secondary"><img title="Recuar" src="/img/backicon.png" style="height:30px" /></a>
+
+
+    <div class="row">
+        <div class="col-md-6 dadosPrincipaisRegisto">
+            <div class="mb-3">
+                <label for="nome" class="form-label">Nome:</label>
+                <InputText id="nome" @bind-Value="Utilizador.Nome" class="form-control" />
+                <ValidationMessage For="() => Utilizador.Nome" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="apelido" class="form-label">Apelido:</label>
+                <InputText id="apelido" @bind-Value="Utilizador.Apelido" class="form-control" />
+                <ValidationMessage For="() => Utilizador.Apelido" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email:</label>
+                <InputText id="email" @bind-Value="Utilizador.Email" class="form-control" />
+                <ValidationMessage For="() => Utilizador.Email" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password:</label>
+                <InputText id="password" @bind-Value="Utilizador.Password" type="password" class="form-control" />
+                <ValidationMessage For="() => Utilizador.Password" class="text-danger" />
+            </div>
+            <label for="confirm-password" class="form-label">Confirmar Password:</label>
+            <InputText type="password" id="confirm-password" @bind-Value="Utilizador.ConfirmPassword" class="form-control" />
+            <ValidationMessage For="() => Utilizador.ConfirmPassword" class="text-danger" />
+            <div class="mb-3">
+                <label for="nif" class="form-label">NIF:</label>
+                <InputNumber id="nif" @bind-Value="Utilizador.NIF" class="form-control" />
+                <ValidationMessage For="() => Utilizador.NIF" class="text-danger" />
+            </div>
+        </div>
+
+        <div class="col-md-6 informacaoPessoalRegisto">
+            <div class="mb-3">
+                <label for="telemovel" class="form-label">Telemóvel:</label>
+                <InputText id="telemovel" @bind-Value="Utilizador.Telemovel" class="form-control" />
+                <ValidationMessage For="() => Utilizador.Telemovel" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="rua" class="form-label">Rua:</label>
+                <InputText id="rua" @bind-Value="Utilizador.Rua" class="form-control" />
+                <ValidationMessage For="() => Utilizador.Rua" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="localidade" class="form-label">Localidade:</label>
+                <InputText id="localidade" @bind-Value="Utilizador.Localidade" class="form-control" />
+                <ValidationMessage For="() => Utilizador.Localidade" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="codigopostal" class="form-label">Código Postal:</label>
+                <InputText id="codigopostal" @bind-Value="Utilizador.CodigoPostal" class="form-control" />
+                <ValidationMessage For="() => Utilizador.CodigoPostal" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="cidade" class="form-label">Cidade:</label>
+                <InputText id="cidade" @bind-Value="Utilizador.Cidade" class="form-control" />
+                <ValidationMessage For="() => Utilizador.Cidade" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="pais" class="form-label">País:</label>
+                <InputText id="pais" @bind-Value="Utilizador.Pais" class="form-control" />
+                <ValidationMessage For="() => Utilizador.Pais" class="text-danger" />
+            </div>
+        </div>
+    </div>
+   
+</EditForm>
+
+@if (IsModalVisible)
+{
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal d-block" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Mensagem</h5>
+                </div>
+                <div class="modal-body">
+                    <p>@ModalMessage</p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+
+    public Utilizador Utilizador { get; set; } = new();
+
+    [Inject]
+    public IApiServices? _apiServices { get; set; }
+
+    // MODAL PARA CONFIRMAR O REGISTO COM SUCESSO
+    public string? ModalMessage { get; set; } = null;
+    public bool IsModalVisible { get; set; } = false;
+
+    public async Task AddUser()
+    {
+        try
+        {
+            // Mapeia os dados do front-end para o modelo RegisterModel esperado pela API
+            var registerModel = new RegisterModel
+                {
+                    Nome = Utilizador.Nome,
+                    Apelido = Utilizador.Apelido,
+                    Email = Utilizador.Email,
+                    Password = Utilizador.Password,
+                    NIF = Utilizador.NIF,
+                    Telemovel = Utilizador.Telemovel,
+                    Rua = Utilizador.Rua,
+                    Localidade = Utilizador.Localidade,
+                    CodigoPostal = Utilizador.CodigoPostal,
+                    Cidade = Utilizador.Cidade,
+                    Pais = Utilizador.Pais
+                };
+
+            var result = await _apiServices.RegistarUtilizador(registerModel);
+
+            if (result.Data)
+            {
+                ShowModal("Obrigado por se Registar na nossa aplicação!", true);
+                // Sucesso: Redireciona para outra página
+                //NavigationManager.NavigateTo("/");
+            }
+            else
+            {
+                ShowModal("Dados de Registo Inválidos.", false);
+                // Mostrar erro ou na interface, se necessário
+                Console.WriteLine($"Erro: {result.ErrorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro: {ex.Message}");
+        }
+    }
+
+    private async void ShowModal(string message, bool isSuccess)
+    {
+        ModalMessage = message;
+        IsModalVisible = true;
+
+        // Aguarda alguns segundos e redireciona (apenas se sucesso)
+        await Task.Delay(3000);
+
+        IsModalVisible = false;
+        if (isSuccess)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+
+        StateHasChanged();
+    }
+}

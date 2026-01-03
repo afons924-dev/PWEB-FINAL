@@ -1,0 +1,120 @@
+﻿@inject RCLAPI.Services.IUserSessionService UserSessionService
+@inject NavigationManager NavigationManager
+
+@using Microsoft.AspNetCore.Components.Authorization
+
+@using Microsoft.AspNetCore.Http
+@using RCLAPI
+@using RCLAPI.Services
+
+<div class="header-container">
+
+    <div class="header-main">
+
+        <div>
+            <span class="logo-span">
+                <a class="logo-span" href="/">@AppConfig.tituloHomePage</a>
+            </span>
+        </div>
+
+        <div class="nav-main">
+            <BtnCarrinho />
+            <LocationComponent />
+        </div>
+
+        @if (!estaAutenticado)
+        {
+            <BtnLogin />
+            <BtnRegister />
+        }
+        else
+        {
+            <BtnEncomendas />
+            <BtnUser />
+            <BtnLogout />
+        }
+
+    </div>
+
+</div>
+
+@code {
+
+    private bool estaAutenticado;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [Inject]
+    private IApiServices apiServices { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        estaAutenticado = await utilizadorAutenticado();
+
+        if (HttpContext != null && HttpContext.User.Identity != null)
+        {
+            estaAutenticado = HttpContext.User.Identity.IsAuthenticated;
+        }
+    }
+
+    // PARA MANDAR SESSSAO ABAIXO CASO O TOKEN ESTEJA INVALIDO
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+
+        var token = await UserSessionService.GetToken();
+
+        if (token != null)
+        {
+
+            var resultado = await apiServices.VerificarEstadoUtilizador(token.UtilizadorId!);
+
+            if (resultado.HasError)
+            {
+                await UserSessionService.Logout();
+                token = null;
+            }
+        }
+
+        var estadoAtual = token != null;
+
+        if (estadoAtual != estaAutenticado)
+        {
+            estaAutenticado = estadoAtual;
+            StateHasChanged();
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+
+
+    private async Task<bool> utilizadorAutenticado()
+    {
+        bool estadoAutenticacaoServiceSessao = await UserSessionService.IsUserLoggedIn();
+
+        Console.WriteLine($"utilizador autenticado ? {estadoAutenticacaoServiceSessao}");
+
+        var token = await UserSessionService.GetToken();
+
+        if (token != null)
+        {
+            Console.WriteLine($"Token ? {token.AccessToken}");
+        } else
+        {
+            Console.WriteLine("Token ? Sem Token");
+        }
+
+        return estaAutenticado || estadoAutenticacaoServiceSessao;
+    }
+
+    private async Task Logout()
+    {
+        NavigationManager.NavigateTo("/");
+
+        estaAutenticado = false;
+        StateHasChanged();
+
+    }
+
+}

@@ -1,0 +1,49 @@
+﻿
+.centered {
+    position: fixed;
+    top: 40%;
+    left: 50%;
+    margin-top: -100px;
+    margin-left: -140px;
+    border-style: double;
+    border-color: #fc0;
+    height: 55%;
+    width: 25%;
+}
+
+.font-valor1 {
+    font-size: 70px;
+    color: #fc0;
+    font-family: 'Vladimir Script';
+ margin: 50%, 10px;
+
+    color: darkorange;
+}
+
+.font-valor2 {
+    font-size: 35px;
+    color: darkblue;
+    font-family: 'Script MT';
+}
+
+.slide-description-top {
+    display: flex;
+    
+    align-content:center;
+}
+
+.slide-description-middle {
+    display: flex;
+    justify-content: space-between;
+    position: absolute;
+    bottom: 3px;
+    right: 20px;
+}
+
+.slide-description-bottom {
+    display: flex;
+    justify-content: space-around;
+    position: absolute;
+    bottom: 2px;
+    right: 20px;
+}
