@@ -1,4 +1,5 @@
 ﻿using MyMEDIA.Shared.Data;
+using MyMEDIA.Shared.Validations;
 using System.ComponentModel.DataAnnotations;
 
 namespace MyMEDIA.Shared.DTO;
