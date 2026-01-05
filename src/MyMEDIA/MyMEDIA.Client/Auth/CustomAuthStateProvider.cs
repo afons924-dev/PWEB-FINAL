@@ -19,8 +19,7 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
-        // Correção: Usa GetItem<string> em vez de GetItemAsync
-        var token = await _localStorage.GetItem<string>("authToken");
+        var token = await _localStorage.GetItemAsync<string>("authToken");
 
         if (string.IsNullOrWhiteSpace(token))
         {
@@ -41,8 +40,7 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
             var result = await response.Content.ReadFromJsonAsync<LoginResult>();
             if (result != null && !string.IsNullOrEmpty(result.AccessToken))
             {
-                // Correção: Usa SetItem em vez de SetItemAsync
-                await _localStorage.SetItem("authToken", result.AccessToken);
+                await _localStorage.SetItemAsync("authToken", result.AccessToken);
                 NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
             }
         }
@@ -50,8 +48,7 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
 
     public async Task Logout()
     {
-        // Correção: Usa RemoveItem em vez de RemoveItemAsync
-        await _localStorage.RemoveItem("authToken");
+        await _localStorage.RemoveItemAsync("authToken");
         _httpClient.DefaultRequestHeaders.Authorization = null;
         NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
     }
