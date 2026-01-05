@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using MyMEDIA.Shared.Data;
+using MyMEDIA.Shared.DTO;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -89,20 +90,4 @@ public class AuthController : ControllerBase
         }
         return Unauthorized();
     }
-}
-
-public class RegisterModel
-{
-    public string Email { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
-    public string FullName { get; set; } = string.Empty;
-    public string UserType { get; set; } = "Client";
-    public string NIF { get; set; } = string.Empty;
-    public string Address { get; set; } = string.Empty;
-}
-
-public class LoginModel
-{
-    public string Email { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
 }

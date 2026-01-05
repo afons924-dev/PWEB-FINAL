@@ -11,7 +11,6 @@ using MyMEDIA.Client.Services;
 using MyMEDIA.Client.Services.Interfaces;
 using System.Net.NetworkInformation;
 using System.Xml.Linq;
-using Xamarin.Essentials;
 
 namespace MyMEDIA.Client.Components.Slider;
 

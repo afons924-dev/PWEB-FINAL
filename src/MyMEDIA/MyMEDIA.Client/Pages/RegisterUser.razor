@@ -139,13 +139,15 @@
                     Apelido = Utilizador.Apelido,
                     Email = Utilizador.Email,
                     Password = Utilizador.Password,
-                    NIF = Utilizador.NIF,
+                    NIF = Utilizador.NIF?.ToString(),
                     Telemovel = Utilizador.Telemovel,
                     Rua = Utilizador.Rua,
                     Localidade = Utilizador.Localidade,
                     CodigoPostal = Utilizador.CodigoPostal,
                     Cidade = Utilizador.Cidade,
-                    Pais = Utilizador.Pais
+                    Pais = Utilizador.Pais,
+                    FullName = Utilizador.Nome + " " + Utilizador.Apelido,
+                    Address = Utilizador.Rua + " " + Utilizador.CodigoPostal + " " + Utilizador.Cidade
                 };
 
             var result = await _apiServices.RegistarUtilizador(registerModel);
