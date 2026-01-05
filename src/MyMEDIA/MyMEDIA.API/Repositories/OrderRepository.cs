@@ -19,7 +19,7 @@ public class OrderRepository : IOrderRepository
         return await _context.Orders
             .Include(o => o.Items)
             .ThenInclude(i => i.Product)
-            .Where(o => o.ClientId == userId)
+            .Where(o => o.UserId == userId)
             .ToListAsync();
     }
 

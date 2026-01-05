@@ -1,6 +1,6 @@
 namespace MyMEDIA.Shared.DTO;
 
-public class Categoria
+public class DeliveryModeDTO
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
@@ -8,5 +8,4 @@ public class Categoria
 
     // Alias for Client
     public string Nome { get => Name; set => Name = value; }
-    public byte[]? Imagem { get; set; } // Category image if applicable
 }

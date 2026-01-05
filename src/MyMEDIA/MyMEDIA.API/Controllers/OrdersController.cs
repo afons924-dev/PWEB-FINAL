@@ -42,7 +42,7 @@ public class OrdersController : ControllerBase
 
         var userId = GetUserId();
         // Check ownership or admin role
-        if (order.ClientId != userId)
+        if (order.UserId != userId)
         {
              // return Unauthorized(); // Or check if admin
         }
@@ -56,7 +56,7 @@ public class OrdersController : ControllerBase
         var userId = GetUserId();
         if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
-        order.ClientId = userId;
+        order.UserId = userId;
         order.OrderDate = DateTime.UtcNow;
         // Calculate total, etc.
 

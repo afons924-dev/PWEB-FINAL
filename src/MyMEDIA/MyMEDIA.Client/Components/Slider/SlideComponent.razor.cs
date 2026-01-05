@@ -109,7 +109,7 @@ public partial class SlideComponent
     private bool abreModal1 = false;
     private bool abreModal2 = false;
 
-    public async void AbreFecha(string janela1, string janela2)
+    public async Task AbreFecha(string janela1, string janela2)
     {
         if (janela1 == "abre")
         {
@@ -172,7 +172,7 @@ public partial class SlideComponent
         //showBackdrop = true;
     }
 
-    public async void Favoritos(string acao, int pId)
+    public async Task Favoritos(string acao, int pId)
     {
         if (favoritoicon == $"images/heart.png")
         {
