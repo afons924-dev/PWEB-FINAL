@@ -3,7 +3,7 @@
     public interface IUtilsTamanhoServices
     {
         int Index { get; set; }
-        float PrecoRefSize { get; set; }
+        decimal PrecoRefSize { get; set; }
 
         public event Action OnChange;
     }

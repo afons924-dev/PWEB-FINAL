@@ -26,9 +26,9 @@ public class FavoritosTemporariosService : IFavoritosTemporariosServices
         string? result = null;
         try
         {
-            result = await _localStorageService.GetItemAsStringAsync("favoritos");
+            result = await _localStorageService.GetItemAsync<string>("favoritos");
         }
-        catch (Exception e)
+        catch (Exception)
         {
 
         }
@@ -204,7 +204,8 @@ public class FavoritosTemporariosService : IFavoritosTemporariosServices
 
     private async Task GuardarFavoritos(HashSet<ProdutoFavorito> favoritos)
     {
-        await _localStorageService.SetItemAsync("favoritos", favoritos);
+        var json = JsonSerializer.Serialize(favoritos);
+        await _localStorageService.SetItemAsync("favoritos", json);
     }
 
 }

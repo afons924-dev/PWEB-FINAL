@@ -7,7 +7,7 @@ namespace MyMEDIA.Client.Services
 
         public int _preco { get; set; } = 1;
 
-        public float _precoRefTamanho { get; set; } = 0.00f;
+        public decimal _precoRefTamanho { get; set; } = 0.00m;
         public int Index {
             get {
                 return _preco;
@@ -18,7 +18,7 @@ namespace MyMEDIA.Client.Services
             }
         }
 
-        public float PrecoRefSize
+        public decimal PrecoRefSize
         {
             get {
                 return _precoRefTamanho;
@@ -29,7 +29,7 @@ namespace MyMEDIA.Client.Services
             }
         }
 
-        public event Action OnChange;
+        public event Action? OnChange;
 
         private void NotificationOnChange() => OnChange?.Invoke();
     }

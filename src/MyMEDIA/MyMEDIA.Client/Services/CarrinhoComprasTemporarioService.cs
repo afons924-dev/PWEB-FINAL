@@ -28,9 +28,9 @@ public class CarrinhoComprasTemporarioService : ICarrinhosComprasTemporarioServi
         string? result = null;
         try
         {
-            result = await _localStorageService.GetItemAsStringAsync("carrinho");
+            result = await _localStorageService.GetItemAsync<string>("carrinho");
         }
-        catch (Exception e)
+        catch (Exception)
         {
 
         }
@@ -346,7 +346,8 @@ public class CarrinhoComprasTemporarioService : ICarrinhosComprasTemporarioServi
 
     private async Task GuardarCarrinho(HashSet<ItemCarrinhoDTO> carrinho)
     {
-        await _localStorageService.SetItemAsync("carrinho", carrinho);
+        var json = JsonSerializer.Serialize(carrinho);
+        await _localStorageService.SetItemAsync("carrinho", json);
     }
 
 }

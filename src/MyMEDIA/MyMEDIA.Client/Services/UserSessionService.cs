@@ -19,7 +19,8 @@ public class UserSessionService : IUserSessionService
     // Guardar na local storage o token recebido do controller
     public async Task Login(Token token)
     {
-        await _localStorage.SetItemAsync("userToken", token);
+        var json = JsonSerializer.Serialize(token);
+        await _localStorage.SetItemAsync("userToken", json);
     }
 
     // Lê da local storage o token
@@ -29,9 +30,9 @@ public class UserSessionService : IUserSessionService
 
         try
         {
-            resultado = await _localStorage.GetItemAsStringAsync("userToken");
+            resultado = await _localStorage.GetItemAsync<string>("userToken");
         }
-        catch (Exception e)
+        catch (Exception)
         {
 
         }
